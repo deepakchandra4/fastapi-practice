@@ -1,9 +1,20 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from enum import Enum
+from dotenv import load_dotenv
+import os 
+from google import genai
 
 
 app = FastAPI()
+api_key = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=api_key)
+
+if api_key:
+    print("API key is verified")
+else:
+    print("API key doesn't exist")
+
 
 class Difficulty(str , Enum):
     beginner = "beginner"
@@ -16,7 +27,7 @@ class QuestionRequest(BaseModel):
 
 
 
-def build_prompt( question , difficulty):
+def build_prompt(question , difficulty):
     if difficulty == "beginner":
         return f"""You are a programming tutor.
         Explain the concept to a complete beginner.
@@ -39,11 +50,16 @@ def build_prompt( question , difficulty):
     else:
         return "Invalid "
 
-prompt = build_prompt()
+
 
 @app.post("/ask")
 def ask_question(request : QuestionRequest):
+
+    prompt = build_prompt(
+        request.question,
+        request.difficulty
+    )
     return {
         "message" : "Prompt created Successfully", 
-        {prompt}
+        "prompt":prompt
     }
